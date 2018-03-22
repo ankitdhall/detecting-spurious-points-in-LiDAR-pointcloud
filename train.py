@@ -21,65 +21,20 @@ import kNet
 import dataset
 
 
-def dist(p, q):
-	return ((p[0]-q[0])**2 + (p[1]-q[1])**2 )**0.5
-
-def get_cross_ratio(keypoints):
-	# print len(keypoints)
-	a = (keypoints[0], keypoints[1])
-	b = (keypoints[2], keypoints[3])
-	c = (keypoints[4], keypoints[5])
-	d = (keypoints[6], keypoints[7])
-	w = a
-	x = (keypoints[8], keypoints[9])
-	y = (keypoints[10], keypoints[11])
-	z = (keypoints[12], keypoints[13])
-	return (dist(a, c)/dist(c, b))/(dist(a, d)/dist(d, b)), (dist(w, y)/dist(y, x))/(dist(w, z)/dist(z, x))
-
-def get_reg_loss_as_lists(outputs, BATCHSIZE):
-	retval_l, retval_r = [], []
-	for i in range(outputs.shape[0]):
-		l, r = get_cross_ratio(outputs[i])
-		retval_l.append(l)
-		retval_r.append(r)
-
-	return retval_l, retval_r
-
-EPS = 1e-5
-def cross_ratio_calc(target):
-	var_l = (((target[:,0]-target[:,4])**2 + (target[:,1]-target[:,5])**2 + EPS)**0.5 / ((target[:,4]-target[:,2])**2 + (target[:,5]-target[:,3])**2 + EPS)**0.5) / \
-	(((target[:,0]-target[:,6])**2 + (target[:,1]-target[:,7])**2 + EPS)**0.5 / ((target[:,6]-target[:,2])**2 + (target[:,7]-target[:,3])**2 + EPS)**0.5)
-
-	var_r = (((target[:,0]-target[:,10])**2 + (target[:,1]-target[:,11])**2 + EPS)**0.5 / ((target[:,10]-target[:,8])**2 + (target[:,11]-target[:,9])**2 + EPS)**0.5) / \
-	(((target[:,0]-target[:,12])**2 + (target[:,1]-target[:,13])**2 + EPS)**0.5 / ((target[:,12]-target[:,8])**2 + (target[:,13]-target[:,9])**2 + EPS)**0.5)
-
-	return var_l, var_r
-
 net = kNet.LidarNet()
 print(net)
 
 # empty space is 70% so weight occupied space by 0.7
-criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor([1.0, 100.0]))
+criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor([1.0, 1000.0]))
 
 
 # create your optimizer
 optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.99)
 
-ANNO_DIR = "/home/vision/code/keypoints/keypoints/augmentation/augmented_anno/"
-IMG_DIR = "/home/vision/code/keypoints/keypoints/augmentation/augmented_img/"
-
-ANNO_DIR = "/home/ankit/code/AMZ/keypoints/augmentation/augmented_anno/"
-IMG_DIR = "/home/ankit/code/AMZ/keypoints/augmentation/augmented_img/"
-
 BKP_DIR = "checkpoints/"
-SAVE_EVERY = 100
-
-MEASURED_CR_CONST = 1.3940842428872968
-# MEASURED_CR = Variable(torch.from_numpy(np.array(MEASURED_CR, dtype=np.float)))
+SAVE_EVERY = 50
 
 GAMMA = 0.0000001
-# transforms.Compose([Rescale(256),
-# 					RandomCrop(224)])
 
 # TRANSFORMS = transforms.Compose([
 # 								 transforms.ToPILImage(),
@@ -95,11 +50,13 @@ train_dataset = dataset.LidarDataset(annotations="1.txt",
 									annotation_dir="data/",
 									input_dim=(4, 16, 1000),
 									transform=None)
+print "Loaded train_dataset..."
 
 test_dataset = dataset.LidarDataset(annotations="1.txt",
 									annotation_dir="data/",
 									input_dim=(4, 16, 1000),
 									transform=None)
+print "Loaded test_dataset..."
 
 BATCHSIZE = 8
 
@@ -111,9 +68,41 @@ testloader = torch.utils.data.DataLoader(dataset=test_dataset,
                                            batch_size=BATCHSIZE, 
                                            shuffle=False)
 
+##### loading model and optimizer state #####
+
+RESUME = True
+START_EPOCH = 0
+RESTORE_MODEL_PATH = BKP_DIR + "0.pth"
+# if RESUME:
+# 	print "Resuming training..."
+# 	print "loading model: ", RESTORE_MODEL_PATH
+# 	netA = torch.load(RESTORE_MODEL_PATH)
+
+if RESUME:
+	if os.path.isfile(RESTORE_MODEL_PATH):
+		# print("=> loading checkpoint '{}'".format(args.resume))
+		print "Resuming training..."
+		print "loading model: ", RESTORE_MODEL_PATH
+		checkpoint = torch.load(RESTORE_MODEL_PATH)
+		START_EPOCH = checkpoint['epoch']
+		# best_prec1 = checkpoint['best_prec1']
+		net.load_state_dict(checkpoint['state_dict'])
+		optimizer.load_state_dict(checkpoint['optimizer'])
+		print("=> loaded checkpoint '{}' (epoch {})"
+			  .format(RESTORE_MODEL_PATH, checkpoint['epoch']))
+	else:
+		print("=> no checkpoint found at '{}'".format(args.resume))
+
+def save_checkpoint(state, dir_path, filename):
+	torch.save(state, dir_path + filename)
+
+
+##### loading model and optimizer state #####
+
+
 
 net.train()
-for epoch in range(102):  # loop over the dataset multiple times
+for epoch in range(START_EPOCH, 502):  # loop over the dataset multiple times
 
 	running_loss = 0.0
 	running_data_loss = 0.0
@@ -160,7 +149,7 @@ for epoch in range(102):  # loop over the dataset multiple times
 
 		if i % 2000 == 0:    # print every 2000 mini-batches
 			print('[%d, %5d] train loss: %.10f data_loss: %.10f reg_loss: %.10f' %
-				  (epoch + 1, i + 1, running_loss*1.0 / len(trainloader), running_data_loss*1.0 / len(trainloader), running_reg_loss*1.0 / len(trainloader)))
+				  (epoch + 1, i + 1, running_loss*1.0 / 2000.0, running_data_loss*1.0 / 2000.0, running_reg_loss*1.0 / 2000.0))
 			running_loss = 0.0
 			running_data_loss = 0.0
 			running_reg_loss = 0.0
@@ -168,7 +157,9 @@ for epoch in range(102):  # loop over the dataset multiple times
 			# testing
 			test_loss, data_loss_test, regularization_loss_test = 0.0, 0.0, 0.0
 			net.eval()
+			test_sample_count = 0
 			for test_i, data in enumerate(testloader, 0):
+				test_sample_count += 1
 				inputs, labels = data['image'], data['keypoints']
 
 				# wrap them in Variable
@@ -190,6 +181,9 @@ for epoch in range(102):  # loop over the dataset multiple times
 				
 				test_loss += data_loss_test # + GAMMA*regularization_loss_test
 
+				# only for prining purposes
+				data_loss_test = 0.0
+				
 				# test_loss = test_loss + loss
 
 				# print test_output
@@ -198,13 +192,26 @@ for epoch in range(102):  # loop over the dataset multiple times
 			# print('[%d, %5d] test loss: %.10f' %
 			# 	  (epoch + 1, i + 1, test_loss*1.0 / len(testloader)))
 			print('[%d, %5d] test loss: %.10f data_loss: %.10f reg_loss: %.10f' %
-				  (epoch + 1, i + 1, test_loss*1.0 / len(testloader), data_loss_test*1.0 / len(testloader), regularization_loss_test*1.0 / len(testloader)))
+				  (epoch + 1, i + 1, test_loss*1.0 / test_sample_count, data_loss_test*1.0 / test_sample_count ,\
+				  						regularization_loss_test*1.0 / test_sample_count))
 			
 			net.train()
 
+	# if epoch%SAVE_EVERY == 0:
+	# 	print("Saving weights...")
+	# 	torch.save(net.state_dict(), BKP_DIR + str(epoch) + ".pth")
+
 	if epoch%SAVE_EVERY == 0:
 		print("Saving weights...")
-		torch.save(net.state_dict(), BKP_DIR + str(epoch) + ".pth")
+		# torch.save(netA.state_dict(), BKP_DIR + str(epoch) + ".pth")
+		# torch.save(netA, BKP_DIR + str(epoch) + ".pth")
+		save_checkpoint({
+			'epoch': epoch + 1,
+			# 'arch': args.arch,
+			'state_dict': net.state_dict(),
+			# 'best_prec1': best_prec1,
+			'optimizer' : optimizer.state_dict(),
+		}, BKP_DIR, str(epoch) + ".pth")
 
 
 print('Finished Training')
