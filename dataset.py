@@ -19,6 +19,26 @@ from skimage import img_as_ubyte
 import cv2
 import sys
 
+class Roll(object):
+    """Roll the LiDAR scan in order to mimic a physical rotation of the LiDAR orientation
+
+    Args: max_roll 
+    """
+
+    def __init__(self, max_roll):
+        self.max_roll = max_roll
+
+    def __call__(self, sample):
+        image, output = sample['image'], sample['keypoints']
+
+        roll_ahead = np.random.randint(0, self.max_roll)
+
+        # print image.shape, output.shape
+
+        image = np.roll(image, roll_ahead, axis=2)
+        output = np.roll(output, roll_ahead, axis=1)
+
+        return {'image': image, 'keypoints': output}
 
 class LidarDataset(Dataset):
 	"""Cones Landmarks dataset."""
@@ -83,9 +103,10 @@ class LidarDataset(Dataset):
 	def __getitem__(self, idx):
 
 		if self.transform:
-			image = self.transform(image)
+			sample = self.transform({'image': self.input[idx], 'keypoints': self.target[idx]})
 
-		sample = {'image': self.input[idx], 'keypoints': self.target[idx]}
+		else:
+			sample = {'image': self.input[idx], 'keypoints': self.target[idx]}
 		return sample
 
 

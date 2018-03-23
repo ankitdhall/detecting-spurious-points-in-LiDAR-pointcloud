@@ -46,16 +46,16 @@ GAMMA = 0.0000001
 # 								 transforms.ToTensor()
 # 								 ])
 
-train_dataset = dataset.LidarDataset(annotations="1.txt",
+train_dataset = dataset.LidarDataset(annotations="train.txt",
 									annotation_dir="data/",
 									input_dim=(4, 16, 1000),
-									transform=None)
+									transform=dataset.Roll(1000))
 print "Loaded train_dataset..."
 
-test_dataset = dataset.LidarDataset(annotations="1.txt",
+test_dataset = dataset.LidarDataset(annotations="test.txt",
 									annotation_dir="data/",
 									input_dim=(4, 16, 1000),
-									transform=None)
+									transform=dataset.Roll(1000))
 print "Loaded test_dataset..."
 
 BATCHSIZE = 8
@@ -72,7 +72,7 @@ testloader = torch.utils.data.DataLoader(dataset=test_dataset,
 
 RESUME = True
 START_EPOCH = 0
-RESTORE_MODEL_PATH = BKP_DIR + "0.pth"
+RESTORE_MODEL_PATH = BKP_DIR + "50.pth"
 # if RESUME:
 # 	print "Resuming training..."
 # 	print "loading model: ", RESTORE_MODEL_PATH
