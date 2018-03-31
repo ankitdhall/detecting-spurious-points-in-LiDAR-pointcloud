@@ -5,24 +5,64 @@ from os import listdir
 from os.path import isfile, join
 
 
-mypath = "data/"
-onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+def split_all():
+	mypath = "data/"
+	onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
 
-onlyfiles = sorted(onlyfiles)
-random.shuffle(onlyfiles)
+	onlyfiles = sorted(onlyfiles)
+	random.shuffle(onlyfiles)
 
-train = onlyfiles[:160]
-test = onlyfiles[160:]
+	TRAIN_FRACTION = 0.8
+	TOTAL_DATA = len(onlyfiles)
 
-text_file = open("train.txt", "w")
-for filename in train:
-	text_file.write("%s\n" % filename)
-text_file.close()
+	TRAIN_NUM = int(TOTAL_DATA*TRAIN_FRACTION)
 
-text_file = open("test.txt", "w")
-for filename in test:
-	text_file.write("%s\n" % filename)
-text_file.close()
+	train = onlyfiles[:TRAIN_NUM]
+	test = onlyfiles[TRAIN_NUM:]
 
-print "train:", len(train), "test:", len(test)
+	text_file = open("train.txt", "w")
+	for filename in train:
+		text_file.write("%s\n" % filename)
+	text_file.close()
 
+	text_file = open("test.txt", "w")
+	for filename in test:
+		text_file.write("%s\n" % filename)
+	text_file.close()
+
+	print "train:", len(train), "test:", len(test)
+
+def split_scenes(test_ids):
+	train, test = [], []
+	
+	mypath = "data/"
+	onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+
+	onlyfiles = sorted(onlyfiles)
+	random.shuffle(onlyfiles)
+
+	for filename in onlyfiles:
+
+		in_test = False
+		for test_id in test_ids:
+			if test_id in filename:
+				test.append(filename)
+				in_test = True
+				break
+		if not in_test:
+			train.append(filename)
+
+
+	text_file = open("train.txt", "w")
+	for filename in train:
+		text_file.write("%s\n" % filename)
+	text_file.close()
+
+	text_file = open("test.txt", "w")
+	for filename in test:
+		text_file.write("%s\n" % filename)
+	text_file.close()
+
+	print "train:", len(train), "test:", len(test)
+
+split_scenes(test_ids = ["2_"])

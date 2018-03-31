@@ -25,7 +25,7 @@ net = kNet.LidarNet()
 print(net)
 
 # empty space is 70% so weight occupied space by 0.7
-criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor([1.0, 1000.0]))
+criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor([1.0, 10000.0]))
 
 
 # create your optimizer
@@ -49,28 +49,33 @@ GAMMA = 0.0000001
 train_dataset = dataset.LidarDataset(annotations="train.txt",
 									annotation_dir="data/",
 									input_dim=(4, 16, 1000),
+									dont_read=[],
 									transform=dataset.Roll(1000))
 print "Loaded train_dataset..."
 
 test_dataset = dataset.LidarDataset(annotations="test.txt",
 									annotation_dir="data/",
 									input_dim=(4, 16, 1000),
+									dont_read=[],
 									transform=dataset.Roll(1000))
 print "Loaded test_dataset..."
 
 BATCHSIZE = 8
 
+# @profile
 trainloader = torch.utils.data.DataLoader(dataset=train_dataset,
                                            batch_size=BATCHSIZE, 
-                                           shuffle=True)
+                                           shuffle=True,
+                                           num_workers=0)
 
 testloader = torch.utils.data.DataLoader(dataset=test_dataset,
                                            batch_size=BATCHSIZE, 
-                                           shuffle=False)
+                                           shuffle=False,
+                                           num_workers=0)
 
 ##### loading model and optimizer state #####
 
-RESUME = True
+RESUME = False
 START_EPOCH = 0
 RESTORE_MODEL_PATH = BKP_DIR + "50.pth"
 # if RESUME:

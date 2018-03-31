@@ -42,8 +42,7 @@ class Roll(object):
 
 class LidarDataset(Dataset):
 	"""Cones Landmarks dataset."""
-
-	def __init__(self, annotations, annotation_dir, input_dim, dont_read=[3, 4, 5, 6], normalize=False, transform=None):
+	def __init__(self, annotations, annotation_dir, input_dim, dont_read, normalize=False, transform=None):
 		"""
 		Args:
 			csv_file (string): Path to the csv file with annotations.
@@ -66,9 +65,13 @@ class LidarDataset(Dataset):
 		self.input = []
 		# annotation_dir = "/home/ankit/code/AMZ/keypoints/annotations/"
 		for i in range(len(filename)):
-
-			loaded = np.load(annotation_dir + filename[i] + ".npz")
-			decoded_file = loaded["gt"][()]
+			print filename[i]
+			# loaded = np.load(annotation_dir + filename[i] + ".npz")
+			# decoded_file = loaded["gt"]
+			# decoded_file = decoded_file[()]
+			loaded = np.load(annotation_dir + filename[i] + ".npy")
+			decoded_file = loaded.item()
+			print decoded_file.keys()
 			print len(decoded_file)
 
 			data_in = np.zeros((4, 16, 1000))
