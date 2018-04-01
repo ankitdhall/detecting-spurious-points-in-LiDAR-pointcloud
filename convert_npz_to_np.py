@@ -6,7 +6,7 @@ from os.path import isfile, join
 
 import numpy as np
 
-annotation_dir = "data/"
+annotation_dir = "data_npz/"
 filename = [f for f in listdir(annotation_dir) if isfile(join(annotation_dir, f))]
 
 # print filename

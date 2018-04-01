@@ -43,7 +43,7 @@ criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor([1.0, 10000.0]))
 optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.99)
 
 BKP_DIR = "checkpoints/"
-SAVE_EVERY = 50
+SAVE_EVERY = 10
 
 GAMMA = 0.0000001
 
@@ -57,21 +57,21 @@ GAMMA = 0.0000001
 # 								 transforms.ToTensor()
 # 								 ])
 
-train_dataset = dataset.LidarDataset(annotations="1.txt",
+train_dataset = dataset.LidarDataset(annotations="train.txt",
 									annotation_dir="data/",
 									input_dim=(4, 16, 1024),
 									dont_read=[],
 									transform=dataset.Roll(1024))
 print "Loaded train_dataset..."
 
-test_dataset = dataset.LidarDataset(annotations="1.txt",
+test_dataset = dataset.LidarDataset(annotations="test.txt",
 									annotation_dir="data/",
 									input_dim=(4, 16, 1024),
 									dont_read=[],
 									transform=dataset.Roll(1024))
 print "Loaded test_dataset..."
 
-BATCHSIZE = 2
+BATCHSIZE = 4
 
 # @profile
 trainloader = torch.utils.data.DataLoader(dataset=train_dataset,
@@ -86,9 +86,9 @@ testloader = torch.utils.data.DataLoader(dataset=test_dataset,
 
 ##### loading model and optimizer state #####
 
-RESUME = False
+RESUME = True
 START_EPOCH = 0
-RESTORE_MODEL_PATH = BKP_DIR + "50.pth"
+RESTORE_MODEL_PATH = BKP_DIR + "10.pth"
 # if RESUME:
 # 	print "Resuming training..."
 # 	print "loading model: ", RESTORE_MODEL_PATH
@@ -191,7 +191,9 @@ for epoch in range(START_EPOCH, 502):  # loop over the dataset multiple times
 
 				# print outputs.shape, labels.shape
 				outputs = outputs.view(outputs.size(0), 2, 16, -1)
-				# print outputs.shape
+				
+				# print torch.max(outputs, 1)
+
 
 				data_loss_test = criterion(outputs, labels)
 				

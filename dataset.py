@@ -52,6 +52,9 @@ class LidarDataset(Dataset):
 		"""
 		self.INPUT_DIM = input_dim
 
+		self.annotation_dir = annotation_dir
+		self.dont_read = dont_read
+
 		text_file = open(annotations, "r")
 		filename = text_file.read().strip().split("\n")
 		text_file.close()
@@ -60,56 +63,88 @@ class LidarDataset(Dataset):
 			filename[i] = filename[i][:-4]
 
 		self.filename = filename
+		self.transform = transform
 
-		self.target = []
-		self.input = []
-		# annotation_dir = "/home/ankit/code/AMZ/keypoints/annotations/"
-		for i in range(len(filename)):
-			print filename[i]
-			# loaded = np.load(annotation_dir + filename[i] + ".npz")
-			# decoded_file = loaded["gt"]
-			# decoded_file = decoded_file[()]
-			loaded = np.load(annotation_dir + filename[i] + ".npy")
-			decoded_file = loaded.item()
-			print decoded_file.keys()
-			print len(decoded_file)
+		# self.target = []
+		# self.input = []
+		# # annotation_dir = "/home/ankit/code/AMZ/keypoints/annotations/"
+		# for i in range(len(filename)):
+		# 	print filename[i]
+		# 	# loaded = np.load(annotation_dir + filename[i] + ".npz")
+		# 	# decoded_file = loaded["gt"]
+		# 	# decoded_file = decoded_file[()]
+		# 	loaded = np.load(annotation_dir + filename[i] + ".npy")
+		# 	decoded_file = loaded.item()
+		# 	print decoded_file.keys()
+		# 	print len(decoded_file)
 
-			data_in = np.zeros(self.INPUT_DIM)
-			data_out = np.zeros((self.INPUT_DIM[1], self.INPUT_DIM[2]))
+		# 	data_in = np.zeros(self.INPUT_DIM)
+		# 	data_out = np.zeros((self.INPUT_DIM[1], self.INPUT_DIM[2]))
 
-			for ring_id in decoded_file.keys():
-				if ring_id in dont_read:
-					continue
+		# 	for ring_id in decoded_file.keys():
+		# 		if ring_id in dont_read:
+		# 			continue
 				
 				
 					
-				ring = decoded_file[ring_id]
-				print ring_id, len(ring["x_gt"])
+		# 		ring = decoded_file[ring_id]
+		# 		print ring_id, len(ring["x_gt"])
 				
-				copy_till = min(self.INPUT_DIM[2], len(ring["y_gt"]))
+		# 		copy_till = min(self.INPUT_DIM[2], len(ring["y_gt"]))
 
-				data_in[0, ring_id, :copy_till] = ring["x_gt"][:copy_till]
-				data_in[1, ring_id, :copy_till] = ring["y_gt"][:copy_till]
-				data_in[2, ring_id, :copy_till] = ring["z_gt"][:copy_till]
-				data_in[3, ring_id, :copy_till] = ring["i_gt"][:copy_till]
+		# 		data_in[0, ring_id, :copy_till] = ring["x_gt"][:copy_till]
+		# 		data_in[1, ring_id, :copy_till] = ring["y_gt"][:copy_till]
+		# 		data_in[2, ring_id, :copy_till] = ring["z_gt"][:copy_till]
+		# 		data_in[3, ring_id, :copy_till] = ring["i_gt"][:copy_till]
 				
-				data_out[ring_id, :copy_till] = [int(item) for item in ring["label_gt"][:copy_till]]
+		# 		data_out[ring_id, :copy_till] = [int(item) for item in ring["label_gt"][:copy_till]]
 
-			self.target.append(data_out)
-			self.input.append(data_in)
+		# 	self.target.append(data_out)
+		# 	self.input.append(data_in)
 
-		self.transform = transform
+		
 
 	def __len__(self):
-		return len(self.target)
+		return len(self.filename)
 
-	def __getitem__(self, idx):
+	def __getitem__(self, idx):		
+
+		# print self.filename[idx]
+		# loaded = np.load(annotation_dir + filename[i] + ".npz")
+		# decoded_file = loaded["gt"]
+		# decoded_file = decoded_file[()]
+		loaded = np.load(self.annotation_dir + self.filename[idx] + ".npy")
+		decoded_file = loaded.item()
+		# print decoded_file.keys()
+		# print len(decoded_file)
+
+		data_in = np.zeros(self.INPUT_DIM)
+		data_out = np.zeros((self.INPUT_DIM[1], self.INPUT_DIM[2]))
+
+		for ring_id in decoded_file.keys():
+			if ring_id in self.dont_read:
+				continue
+			
+			
+				
+			ring = decoded_file[ring_id]
+			# print ring_id, len(ring["x_gt"])
+			
+			copy_till = min(self.INPUT_DIM[2], len(ring["y_gt"]))
+
+			data_in[0, ring_id, :copy_till] = ring["x_gt"][:copy_till]
+			data_in[1, ring_id, :copy_till] = ring["y_gt"][:copy_till]
+			data_in[2, ring_id, :copy_till] = ring["z_gt"][:copy_till]
+			data_in[3, ring_id, :copy_till] = ring["i_gt"][:copy_till]
+			
+			data_out[ring_id, :copy_till] = [int(item) for item in ring["label_gt"][:copy_till]]
+
 
 		if self.transform:
-			sample = self.transform({'image': self.input[idx], 'keypoints': self.target[idx]})
+			sample = self.transform({'image': data_in, 'keypoints': data_out})
 
 		else:
-			sample = {'image': self.input[idx], 'keypoints': self.target[idx]}
+			sample = {'image': data_in, 'keypoints': data_out}
 		return sample
 
 

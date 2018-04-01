@@ -65,4 +65,4 @@ def split_scenes(test_ids):
 
 	print "train:", len(train), "test:", len(test)
 
-split_scenes(test_ids = ["2_"])
+split_scenes(test_ids = ["2_", "3_"])
