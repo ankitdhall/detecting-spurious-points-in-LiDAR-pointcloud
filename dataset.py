@@ -74,8 +74,8 @@ class LidarDataset(Dataset):
 			print decoded_file.keys()
 			print len(decoded_file)
 
-			data_in = np.zeros((4, 16, 1000))
-			data_out = np.zeros((16, 1000))
+			data_in = np.zeros(self.INPUT_DIM)
+			data_out = np.zeros((self.INPUT_DIM[1], self.INPUT_DIM[2]))
 
 			for ring_id in decoded_file.keys():
 				if ring_id in dont_read:
@@ -86,7 +86,7 @@ class LidarDataset(Dataset):
 				ring = decoded_file[ring_id]
 				print ring_id, len(ring["x_gt"])
 				
-				copy_till = min(1000, len(ring["y_gt"]))
+				copy_till = min(self.INPUT_DIM[2], len(ring["y_gt"]))
 
 				data_in[0, ring_id, :copy_till] = ring["x_gt"][:copy_till]
 				data_in[1, ring_id, :copy_till] = ring["y_gt"][:copy_till]

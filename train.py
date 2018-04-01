@@ -18,10 +18,21 @@ import skimage.transform
 import cv2
 
 import kNet
+import resnet
 import dataset
 
+from unet_model import UNet
+
+# net = UNet(4, 2)
+# lr = 0.01
+# momentum = 0.99
 
 net = kNet.LidarNet()
+# lr = 0.01
+# momentum = 0.99
+
+# net = resnet.resnet18(pretrained=True, num_classes=2*16000)
+
 print(net)
 
 # empty space is 70% so weight occupied space by 0.7
@@ -46,21 +57,21 @@ GAMMA = 0.0000001
 # 								 transforms.ToTensor()
 # 								 ])
 
-train_dataset = dataset.LidarDataset(annotations="train.txt",
+train_dataset = dataset.LidarDataset(annotations="1.txt",
 									annotation_dir="data/",
-									input_dim=(4, 16, 1000),
+									input_dim=(4, 16, 1024),
 									dont_read=[],
-									transform=dataset.Roll(1000))
+									transform=dataset.Roll(1024))
 print "Loaded train_dataset..."
 
-test_dataset = dataset.LidarDataset(annotations="test.txt",
+test_dataset = dataset.LidarDataset(annotations="1.txt",
 									annotation_dir="data/",
-									input_dim=(4, 16, 1000),
+									input_dim=(4, 16, 1024),
 									dont_read=[],
-									transform=dataset.Roll(1000))
+									transform=dataset.Roll(1024))
 print "Loaded test_dataset..."
 
-BATCHSIZE = 8
+BATCHSIZE = 2
 
 # @profile
 trainloader = torch.utils.data.DataLoader(dataset=train_dataset,
