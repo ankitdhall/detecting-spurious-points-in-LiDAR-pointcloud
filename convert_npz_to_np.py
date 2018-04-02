@@ -19,6 +19,6 @@ for i in range(len(filename)):
 
 	# print decoded_file.keys()
 
-	print i
+	print(i)
 
 	np.save(filename[i][:-4] + ".npy", np.array(decoded_file))

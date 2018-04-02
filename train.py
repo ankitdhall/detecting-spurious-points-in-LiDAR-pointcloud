@@ -9,7 +9,7 @@ import torch.optim as optim
 
 import os
 from skimage import io, transform
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 
@@ -68,14 +68,14 @@ train_dataset = dataset.LidarDataset(annotations="train.txt",
 									input_dim=(4, 16, 1024),
 									dont_read=[],
 									transform=dataset.Roll(1024))
-print "Loaded train_dataset..."
+print("Loaded train_dataset...")
 
 test_dataset = dataset.LidarDataset(annotations="test.txt",
 									annotation_dir=ANNO_PATH + "data/",
 									input_dim=(4, 16, 1024),
 									dont_read=[],
 									transform=dataset.Roll(1024))
-print "Loaded test_dataset..."
+print("Loaded test_dataset...")
 
 BATCHSIZE = 4
 
@@ -103,8 +103,8 @@ RESTORE_MODEL_PATH = BKP_DIR + "10.pth"
 if RESUME:
 	if os.path.isfile(RESTORE_MODEL_PATH):
 		# print("=> loading checkpoint '{}'".format(args.resume))
-		print "Resuming training..."
-		print "loading model: ", RESTORE_MODEL_PATH
+		print("Resuming training...")
+		print("loading model: {}".format(RESTORE_MODEL_PATH))
 		checkpoint = torch.load(RESTORE_MODEL_PATH)
 		START_EPOCH = checkpoint['epoch']
 		# best_prec1 = checkpoint['best_prec1']

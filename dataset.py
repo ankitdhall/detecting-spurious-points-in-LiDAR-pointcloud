@@ -148,112 +148,112 @@ class LidarDataset(Dataset):
 		return sample
 
 
-class ConesLandmarksDataset(Dataset):
-	"""Cones Landmarks dataset."""
+# class ConesLandmarksDataset(Dataset):
+# 	"""Cones Landmarks dataset."""
 
-	def __init__(self, annotations, annotation_dir, img_dir, input_dim, normalize=False, transform=None):
-		"""
-		Args:
-			csv_file (string): Path to the csv file with annotations.
-			root_dir (string): Directory with all the images.
-			transform (callable, optional): Optional transform to be applied
-				on a sample.
-		"""
-		self.INPUT_DIM = input_dim
+# 	def __init__(self, annotations, annotation_dir, img_dir, input_dim, normalize=False, transform=None):
+# 		"""
+# 		Args:
+# 			csv_file (string): Path to the csv file with annotations.
+# 			root_dir (string): Directory with all the images.
+# 			transform (callable, optional): Optional transform to be applied
+# 				on a sample.
+# 		"""
+# 		self.INPUT_DIM = input_dim
 
-		text_file = open(annotations, "r")
-		filename = text_file.read().strip().split("\n")
-		text_file.close()
+# 		text_file = open(annotations, "r")
+# 		filename = text_file.read().strip().split("\n")
+# 		text_file.close()
 
-		for i in range(len(filename)):
-			filename[i] = filename[i][:-4]
+# 		for i in range(len(filename)):
+# 			filename[i] = filename[i][:-4]
 
-		self.filename = filename
+# 		self.filename = filename
 
-		self.target = []
-		# annotation_dir = "/home/ankit/code/AMZ/keypoints/annotations/"
-		for i in range(len(filename)):
-			text_file = open(annotation_dir + filename[i] + ".txt", "r")
-			img_annotation = text_file.read().strip().split("\n")
+# 		self.target = []
+# 		# annotation_dir = "/home/ankit/code/AMZ/keypoints/annotations/"
+# 		for i in range(len(filename)):
+# 			text_file = open(annotation_dir + filename[i] + ".txt", "r")
+# 			img_annotation = text_file.read().strip().split("\n")
 
-			# print filename[i]
-			# print annotation_dir + filename[i] + ".txt"
+# 			# print filename[i]
+# 			# print annotation_dir + filename[i] + ".txt"
 
-			img_cols, img_rows, img_channels = img_annotation[0].split(" ")[0:3]
-			# print img_cols, img_rows, img_channels
+# 			img_cols, img_rows, img_channels = img_annotation[0].split(" ")[0:3]
+# 			# print img_cols, img_rows, img_channels
 
-			dw = 1.0/int(img_cols)
-			dh = 1.0/int(img_rows)
+# 			dw = 1.0/int(img_cols)
+# 			dh = 1.0/int(img_rows)
 			
 
-			annotation = []
-			for ii in range(1, len(img_annotation)-1):
-				# print img_annotation[i].split(" ")
-				c,r = img_annotation[ii].split(" ")[0:2]
+# 			annotation = []
+# 			for ii in range(1, len(img_annotation)-1):
+# 				# print img_annotation[i].split(" ")
+# 				c,r = img_annotation[ii].split(" ")[0:2]
 
-				if normalize:
-					annotation.append(float(1.0*int(c)*dw))
-					annotation.append(float(1.0*int(r)*dh))
-				else:
-					annotation.append(float(1.0*int(c)*dw*self.INPUT_DIM))
-					annotation.append(float(1.0*int(r)*dh*self.INPUT_DIM))
-
-
-
-			annotation = np.array(annotation)
-			self.target.append(annotation)
-			# print np.where(annotation > 1.0)
+# 				if normalize:
+# 					annotation.append(float(1.0*int(c)*dw))
+# 					annotation.append(float(1.0*int(r)*dh))
+# 				else:
+# 					annotation.append(float(1.0*int(c)*dw*self.INPUT_DIM))
+# 					annotation.append(float(1.0*int(r)*dh*self.INPUT_DIM))
 
 
-			if len(np.where(annotation > 1.0)[0]) != 0 and normalize == True:
-				print img_annotation
-				print annotation
-				print filename[i]
-				print "WARNING! annotation exceeds dimension!"
-				sys.exit()
+
+# 			annotation = np.array(annotation)
+# 			self.target.append(annotation)
+# 			# print np.where(annotation > 1.0)
+
+
+# 			if len(np.where(annotation > 1.0)[0]) != 0 and normalize == True:
+# 				print img_annotation
+# 				print annotation
+# 				print filename[i]
+# 				print "WARNING! annotation exceeds dimension!"
+# 				sys.exit()
 			
 
-			text_file.close()
+# 			text_file.close()
 
-		self.img_dir = img_dir
-		self.transform = transform
+# 		self.img_dir = img_dir
+# 		self.transform = transform
 
-	def __len__(self):
-		return len(self.target)
+# 	def __len__(self):
+# 		return len(self.target)
 
-	def __getitem__(self, idx):
-		img_name = self.img_dir + self.filename[idx] + ".jpg"
-		resized_img = skimage.transform.resize(io.imread(img_name), (self.INPUT_DIM, self.INPUT_DIM, 3))
-		image = resized_img
+# 	def __getitem__(self, idx):
+# 		img_name = self.img_dir + self.filename[idx] + ".jpg"
+# 		resized_img = skimage.transform.resize(io.imread(img_name), (self.INPUT_DIM, self.INPUT_DIM, 3))
+# 		image = resized_img
 
-		# print image.shape
-		image = cv2.cvtColor(img_as_ubyte(image), cv2.COLOR_BGR2RGB)
-		# cv2.imshow("cones BGR", image)
-		# cv2.waitKey(0)
+# 		# print image.shape
+# 		image = cv2.cvtColor(img_as_ubyte(image), cv2.COLOR_BGR2RGB)
+# 		# cv2.imshow("cones BGR", image)
+# 		# cv2.waitKey(0)
 
-		# print image.dtype
-		# print image
+# 		# print image.dtype
+# 		# print image
 
-		# image = np.transpose(image, (2, 0, 1))
+# 		# image = np.transpose(image, (2, 0, 1))
 
-		# image = torch.from_numpy(resized_img)
-		# # print image.shape # 104, 74, 3 BGR
-		# image = image.permute(2, 0, 1).numpy()
+# 		# image = torch.from_numpy(resized_img)
+# 		# # print image.shape # 104, 74, 3 BGR
+# 		# image = image.permute(2, 0, 1).numpy()
 
-		# print image.dtype
-		# print "dataset", image.shape
-
-		
-		
-
-		keypoints = torch.from_numpy(self.target[idx])
-		# print keypoints
-
-		if self.transform:
-			image = self.transform(image)
-
-		sample = {'image': image, 'keypoints': keypoints}
+# 		# print image.dtype
+# 		# print "dataset", image.shape
 
 		
+		
 
-		return sample
+# 		keypoints = torch.from_numpy(self.target[idx])
+# 		# print keypoints
+
+# 		if self.transform:
+# 			image = self.transform(image)
+
+# 		sample = {'image': image, 'keypoints': keypoints}
+
+		
+
+# 		return sample
