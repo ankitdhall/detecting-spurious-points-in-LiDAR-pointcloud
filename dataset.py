@@ -8,13 +8,13 @@ import torch.optim as optim
 
 
 import os
-from skimage import io, transform
-import matplotlib.pyplot as plt
+# from skimage import io, transform
+# import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 
-import skimage.transform
-from skimage import img_as_ubyte
+# import skimage.transform
+# from skimage import img_as_ubyte
 
 import cv2
 import sys
@@ -113,7 +113,7 @@ class LidarDataset(Dataset):
 		# loaded = np.load(annotation_dir + filename[i] + ".npz")
 		# decoded_file = loaded["gt"]
 		# decoded_file = decoded_file[()]
-		loaded = np.load(self.annotation_dir + self.filename[idx] + ".npy")
+		loaded = np.load(self.annotation_dir + self.filename[idx] + ".npy", encoding='latin1')
 		decoded_file = loaded.item()
 		# print decoded_file.keys()
 		# print len(decoded_file)

@@ -8,17 +8,17 @@ import torch.optim as optim
 
 
 import os
-from skimage import io, transform
+# from skimage import io, transform
 # import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 
-import skimage.transform
+# import skimage.transform
 
 import cv2
 
 import kNet
-import resnet
+# import resnet
 import dataset
 
 from unet_model import UNet
@@ -59,18 +59,21 @@ GAMMA = 0.0000001
 
 ON_CLUSTER = True
 
+LIST_PATH = ""
 ANNO_PATH = ""
 if ON_CLUSTER:
 	ANNO_PATH = "/cluster/scratch/adhall/"
+	LIST_PATH = "/cluster/home/adhall/code/LiDAR-weather-gt/"
+	BKP_DIR = LIST_PATH + BKP_DIR
 
-train_dataset = dataset.LidarDataset(annotations="train.txt",
+train_dataset = dataset.LidarDataset(annotations=LIST_PATH + "train.txt",
 									annotation_dir=ANNO_PATH + "data/",
 									input_dim=(4, 16, 1024),
 									dont_read=[],
 									transform=dataset.Roll(1024))
 print("Loaded train_dataset...")
 
-test_dataset = dataset.LidarDataset(annotations="test.txt",
+test_dataset = dataset.LidarDataset(annotations=LIST_PATH + "test.txt",
 									annotation_dir=ANNO_PATH + "data/",
 									input_dim=(4, 16, 1024),
 									dont_read=[],
