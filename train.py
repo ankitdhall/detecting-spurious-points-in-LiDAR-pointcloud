@@ -57,15 +57,21 @@ GAMMA = 0.0000001
 # 								 transforms.ToTensor()
 # 								 ])
 
+ON_CLUSTER = True
+
+ANNO_PATH = ""
+if ON_CLUSTER:
+	ANNO_PATH = "/cluster/scratch/adhall/"
+
 train_dataset = dataset.LidarDataset(annotations="train.txt",
-									annotation_dir="data/",
+									annotation_dir=ANNO_PATH + "data/",
 									input_dim=(4, 16, 1024),
 									dont_read=[],
 									transform=dataset.Roll(1024))
 print "Loaded train_dataset..."
 
 test_dataset = dataset.LidarDataset(annotations="test.txt",
-									annotation_dir="data/",
+									annotation_dir=ANNO_PATH + "data/",
 									input_dim=(4, 16, 1024),
 									dont_read=[],
 									transform=dataset.Roll(1024))
@@ -86,7 +92,7 @@ testloader = torch.utils.data.DataLoader(dataset=test_dataset,
 
 ##### loading model and optimizer state #####
 
-RESUME = True
+RESUME = False
 START_EPOCH = 0
 RESTORE_MODEL_PATH = BKP_DIR + "10.pth"
 # if RESUME:
