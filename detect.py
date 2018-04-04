@@ -57,11 +57,11 @@ criterion_unweighted = nn.CrossEntropyLoss()
 
 USE_NET = "lidar"
 
-test_dataset = dataset.LidarDataset(annotations="test.txt",
+test_dataset = dataset.LidarDataset(annotations="1.txt",
 									annotation_dir="data/",
 									input_dim=(4, 16, 1024),
 									dont_read=[],
-									transform=dataset.Roll(1024))
+									transform=None)
 print("Loaded test_dataset...")
 
 BATCHSIZE = 1
@@ -75,7 +75,7 @@ testloader = torch.utils.data.DataLoader(dataset=test_dataset,
 
 BKP_DIR = "checkpoints/"
 
-RESTORE_MODEL_PATH = BKP_DIR + '10.pth'
+RESTORE_MODEL_PATH = BKP_DIR + '200.pth'
 
 lidar_classify = detect(RESTORE_MODEL_PATH, USE_NET)
 
@@ -127,7 +127,11 @@ for test_i, data in enumerate(testloader, 0):
 
 	outputs = predictions.view(predictions.size(0), 2, 16, -1)
 
+	custom_criterion = dataset.cross_entropy_weighted_loss(outputs, labels, [1.0, 1.0])
+	custom_criterion_weighted = dataset.cross_entropy_weighted_loss(outputs, labels, [1.0, 10.0])
+
 	print("Weigted loss:{} \nUnweighted loss:{}".format(criterion(outputs, labels), criterion_unweighted(outputs, labels)))
+	print("Custom unweighted loss:{}\n Custom weighted loss:{}".format(custom_criterion, custom_criterion_weighted))
 
 	_, outputs = torch.max(outputs, 1)
 	
@@ -145,8 +149,10 @@ for test_i, data in enumerate(testloader, 0):
 	img_gt = labels.data.numpy()[0]
 	img_gt = np.repeat(img_gt, 10, axis=0)
 
-	cv2.imshow("predictions", 255*img_pred)
-	cv2.imshow("gt", 255*img_gt)
+	cv2.imshow("predictions", 255*img_pred.astype(np.uint8))
+	cv2.imshow("gt", 255*img_gt.astype(np.uint8))
+	print len(np.where(img_gt == 1)[0])
+	print type(img_gt), img_gt.dtype
 	cv2.waitKey(0)
 
 	break

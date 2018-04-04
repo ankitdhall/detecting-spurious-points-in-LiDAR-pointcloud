@@ -19,6 +19,26 @@ from torchvision import transforms, utils
 import cv2
 import sys
 
+def cross_entropy_weighted_loss(output, target, scalar_weights):
+	weights = np.copy(target.data)
+
+	# assert num channels == len(weight)
+
+	for class_id in range(len(scalar_weights)):
+		weights[weights == class_id] = float(scalar_weights[class_id])
+
+	weights = Variable(torch.from_numpy(weights).float())
+
+	loss = nn.CrossEntropyLoss(reduce=False)
+	# x has size (N, C, 224, 224)
+
+	out = loss(output, target)
+	# out has size (N, H, W). Your weights have size (H, W)
+
+	result = (out * weights)
+	result = result.mean()
+	return result
+
 class Roll(object):
     """Roll the LiDAR scan in order to mimic a physical rotation of the LiDAR orientation
 

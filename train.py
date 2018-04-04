@@ -19,6 +19,8 @@ import dataset
 
 from unet_model import UNet
 
+CLASS_WEIGHTS = [1.0, 1000.0]
+
 # net = UNet(4, 2)
 # lr = 0.01
 # momentum = 0.99
@@ -32,14 +34,14 @@ net = kNet.LidarNet()
 print(net)
 
 # empty space is 70% so weight occupied space by 0.7
-criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor([1.0, 10000.0]))
+# criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor([1.0, 10000.0]))
 
 
 # create your optimizer
-optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.99)
+optimizer = optim.SGD(net.parameters(), lr=0.0001, momentum=0.9)
 
 BKP_DIR = "checkpoints/"
-SAVE_EVERY = 10
+SAVE_EVERY = 200
 
 GAMMA = 0.0000001
 
@@ -53,14 +55,14 @@ if ON_CLUSTER:
 	LIST_PATH = "/cluster/home/adhall/code/LiDAR-weather-gt/"
 	BKP_DIR = LIST_PATH + BKP_DIR
 
-train_dataset = dataset.LidarDataset(annotations=LIST_PATH + "train.txt",
+train_dataset = dataset.LidarDataset(annotations=LIST_PATH + "1.txt",
 									annotation_dir=ANNO_PATH + "data/",
 									input_dim=(4, 16, 1024),
 									dont_read=[],
 									transform=dataset.Roll(1024))
 print("Loaded train_dataset...")
 
-test_dataset = dataset.LidarDataset(annotations=LIST_PATH + "test.txt",
+test_dataset = dataset.LidarDataset(annotations=LIST_PATH + "1.txt",
 									annotation_dir=ANNO_PATH + "data/",
 									input_dim=(4, 16, 1024),
 									dont_read=[],
@@ -133,7 +135,8 @@ for epoch in range(START_EPOCH, 502):  # loop over the dataset multiple times
 
 		outputs = outputs.view(outputs.size(0), 2, 16, -1)
 
-		data_loss = criterion(outputs, labels)
+		# data_loss = criterion(outputs, labels)
+		data_loss = dataset.cross_entropy_weighted_loss(outputs, labels, CLASS_WEIGHTS)
 		
 
 		loss = data_loss # + GAMMA*regularization_loss
@@ -173,7 +176,8 @@ for epoch in range(START_EPOCH, 502):  # loop over the dataset multiple times
 				# print torch.max(outputs, 1)
 
 
-				data_loss_test = criterion(outputs, labels)
+				# data_loss_test = criterion(outputs, labels)
+				data_loss_test = dataset.cross_entropy_weighted_loss(outputs, labels, [1.0, 1.0])
 				
 				test_loss += data_loss_test # + GAMMA*regularization_loss_test
 
