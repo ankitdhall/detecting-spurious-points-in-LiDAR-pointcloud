@@ -19,6 +19,8 @@ from torchvision import transforms, utils
 import cv2
 import sys
 
+from random import randint
+
 def cross_entropy_weighted_loss(output, target, scalar_weights):
 	weights = np.copy(target.data)
 
@@ -62,7 +64,7 @@ class Roll(object):
 
 class LidarDataset(Dataset):
 	"""Cones Landmarks dataset."""
-	def __init__(self, annotations, annotation_dir, input_dim, dont_read, normalize=False, transform=None):
+	def __init__(self, annotations, annotation_dir, input_dim, cols, dont_read, normalize=False, transform=None):
 		"""
 		Args:
 			csv_file (string): Path to the csv file with annotations.
@@ -71,6 +73,7 @@ class LidarDataset(Dataset):
 				on a sample.
 		"""
 		self.INPUT_DIM = input_dim
+		self.COLS = cols
 
 		self.annotation_dir = annotation_dir
 		self.dont_read = dont_read
@@ -84,6 +87,10 @@ class LidarDataset(Dataset):
 
 		self.filename = filename
 		self.transform = transform
+
+		# for debugging
+		self.total_smoky_frac = 0.0
+		self.ctr = 0
 
 		# self.target = []
 		# self.input = []
@@ -149,6 +156,7 @@ class LidarDataset(Dataset):
 				
 			ring = decoded_file[ring_id]
 			# print ring_id, len(ring["x_gt"])
+			# print(ring.keys())
 			
 			copy_till = min(self.INPUT_DIM[2], len(ring["y_gt"]))
 
@@ -156,15 +164,36 @@ class LidarDataset(Dataset):
 			data_in[1, ring_id, :copy_till] = ring["y_gt"][:copy_till]
 			data_in[2, ring_id, :copy_till] = ring["z_gt"][:copy_till]
 			data_in[3, ring_id, :copy_till] = ring["i_gt"][:copy_till]
+			data_in[4, ring_id, :copy_till] = ring["r_gt"][:copy_till]
 			
 			data_out[ring_id, :copy_till] = [int(item) for item in ring["label_gt"][:copy_till]]
 
+			if self.COLS != self.INPUT_DIM[2]:
+				counter = 0
+				while True:
+					counter+=1
+					r_col = randint(0, self.INPUT_DIM[2]-self.COLS)
+
+					data_out_cropped = data_out[:, r_col:r_col+self.COLS]
+
+					smoky_frac = 1.0*np.sum(data_out_cropped==1)/data_out_cropped.size
+					if smoky_frac >= 0.04 or counter>100:
+						break
+
+				# print("Smoky fraction is:{}, {}/{}".format(smoky_frac, np.sum(data_out_cropped==1), data_out_cropped.size))
+				self.total_smoky_frac += smoky_frac
+				self.ctr += 1
+				
+				# print("Total smoky fraction is:{}".format(1.0*self.total_smoky_frac/self.ctr))
+
+				data_in_cropped = data_in[:, :, r_col:r_col+self.COLS]
+
 
 		if self.transform:
-			sample = self.transform({'image': data_in, 'keypoints': data_out})
+			sample = self.transform({'image': data_in_cropped, 'keypoints': data_out_cropped})
 
 		else:
-			sample = {'image': data_in, 'keypoints': data_out}
+			sample = {'image': data_in_cropped, 'keypoints': data_out_cropped}
 		return sample
 
 

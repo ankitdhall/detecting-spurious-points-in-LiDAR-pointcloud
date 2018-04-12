@@ -57,7 +57,7 @@ criterion_unweighted = nn.CrossEntropyLoss()
 
 USE_NET = "lidar"
 
-test_dataset = dataset.LidarDataset(annotations="1.txt",
+test_dataset = dataset.LidarDataset(annotations="test.txt",
 									annotation_dir="data/",
 									input_dim=(4, 16, 1024),
 									dont_read=[],
@@ -75,7 +75,7 @@ testloader = torch.utils.data.DataLoader(dataset=test_dataset,
 
 BKP_DIR = "checkpoints/"
 
-RESTORE_MODEL_PATH = BKP_DIR + '200.pth'
+RESTORE_MODEL_PATH = BKP_DIR + '100_euler.pth'
 
 lidar_classify = detect(RESTORE_MODEL_PATH, USE_NET)
 
@@ -154,5 +154,3 @@ for test_i, data in enumerate(testloader, 0):
 	print len(np.where(img_gt == 1)[0])
 	print type(img_gt), img_gt.dtype
 	cv2.waitKey(0)
-
-	break

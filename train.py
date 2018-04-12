@@ -47,6 +47,9 @@ GAMMA = 0.0000001
 
 
 ON_CLUSTER = False
+COLS = 256
+INPUT_DIM = (5, 16, 1024)
+MAX_ROLL = COLS
 
 LIST_PATH = ""
 ANNO_PATH = ""
@@ -55,18 +58,20 @@ if ON_CLUSTER:
 	LIST_PATH = "/cluster/home/adhall/code/LiDAR-weather-gt/"
 	BKP_DIR = LIST_PATH + BKP_DIR
 
-train_dataset = dataset.LidarDataset(annotations=LIST_PATH + "1.txt",
+train_dataset = dataset.LidarDataset(annotations=LIST_PATH + "train.txt",
 									annotation_dir=ANNO_PATH + "data/",
-									input_dim=(4, 16, 1024),
+									input_dim=INPUT_DIM,
+									cols=COLS,
 									dont_read=[],
-									transform=dataset.Roll(1024))
+									transform=dataset.Roll(MAX_ROLL))
 print("Loaded train_dataset...")
 
-test_dataset = dataset.LidarDataset(annotations=LIST_PATH + "1.txt",
+test_dataset = dataset.LidarDataset(annotations=LIST_PATH + "test.txt",
 									annotation_dir=ANNO_PATH + "data/",
-									input_dim=(4, 16, 1024),
+									input_dim=INPUT_DIM,
+									cols=COLS,
 									dont_read=[],
-									transform=dataset.Roll(1024))
+									transform=dataset.Roll(MAX_ROLL))
 print("Loaded test_dataset...")
 
 BATCHSIZE = 4
@@ -119,6 +124,8 @@ for epoch in range(START_EPOCH, 502):  # loop over the dataset multiple times
 	# what does enumerate do?
 	for i, data in enumerate(trainloader, 0):
 		inputs, labels = data['image'], data['keypoints']
+
+		# print(inputs.shape)
 
 		# wrap them in Variable
 		inputs = Variable(inputs).float()

@@ -9,8 +9,8 @@ class LidarNet(nn.Module):
 		super(LidarNet, self).__init__()
 		padval = (1, 1)
 
-		self.bn1 = nn.BatchNorm2d(4, affine=True)
-		self.conv1 = nn.Conv2d(4, 16, 3, padding=padval)
+		self.bn1 = nn.BatchNorm2d(5, affine=True)
+		self.conv1 = nn.Conv2d(5, 16, 3, padding=padval)
 		
 		self.bn2 = nn.BatchNorm2d(16, affine=True)
 		self.conv2 = nn.Conv2d(16, 32, 3, padding=padval)
