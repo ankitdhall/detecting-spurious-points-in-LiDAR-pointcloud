@@ -36,7 +36,7 @@ class LidarNet(nn.Module):
 		self.conv2Up = nn.ConvTranspose2d(32, 16, 3, stride=(1, 4), padding=padval)
 
 		self.bn1Up = nn.BatchNorm2d(16, affine=True)
-		self.conv1Up = nn.ConvTranspose2d(16, 2, 3, stride=(1, 4), padding=padval)
+		self.conv1Up = nn.ConvTranspose2d(16, 3, 3, stride=(1, 4), padding=padval)
 
 	def forward(self, x):
 		# print x

@@ -6,6 +6,9 @@ from torchvision import transforms, utils
 import torchvision
 # import matplotlib.pyplot as plt
 
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
 import cv2
 import numpy as np
 
@@ -52,16 +55,21 @@ class detect():
 		predictions = self.net(input)
 		return predictions
 
-criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor([1.0, 10000.0]))
-criterion_unweighted = nn.CrossEntropyLoss()
+# criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor([1.0, 10000.0]))
+# criterion_unweighted = nn.CrossEntropyLoss()
 
 USE_NET = "lidar"
 
-test_dataset = dataset.LidarDataset(annotations="test.txt",
+CLASS_WEIGHTS = [1.0, 10000.0, 0.0]
+COLS = 1024
+MAX_ROLL = COLS
+
+test_dataset = dataset.LidarDataset(annotations="test_small.txt",
 									annotation_dir="data/",
-									input_dim=(4, 16, 1024),
+									input_dim=(5, 16, 1024),
+									cols=COLS,
 									dont_read=[],
-									transform=None)
+									transform=dataset.Roll(MAX_ROLL))
 print("Loaded test_dataset...")
 
 BATCHSIZE = 1
@@ -75,7 +83,7 @@ testloader = torch.utils.data.DataLoader(dataset=test_dataset,
 
 BKP_DIR = "checkpoints/"
 
-RESTORE_MODEL_PATH = BKP_DIR + '100_euler.pth'
+RESTORE_MODEL_PATH = BKP_DIR + '60.pth'
 
 lidar_classify = detect(RESTORE_MODEL_PATH, USE_NET)
 
@@ -125,12 +133,12 @@ for test_i, data in enumerate(testloader, 0):
 	elapsed_time += (time.time() - t0)
 	forward_passes += 1
 
-	outputs = predictions.view(predictions.size(0), 2, 16, -1)
+	outputs = predictions.view(predictions.size(0), len(CLASS_WEIGHTS), 16, -1)
 
-	custom_criterion = dataset.cross_entropy_weighted_loss(outputs, labels, [1.0, 1.0])
-	custom_criterion_weighted = dataset.cross_entropy_weighted_loss(outputs, labels, [1.0, 10.0])
+	custom_criterion = dataset.cross_entropy_weighted_loss(outputs, labels, [1.0, 1.0, 0.0])
+	custom_criterion_weighted = dataset.cross_entropy_weighted_loss(outputs, labels, CLASS_WEIGHTS)
 
-	print("Weigted loss:{} \nUnweighted loss:{}".format(criterion(outputs, labels), criterion_unweighted(outputs, labels)))
+	# print("Weigted loss:{} \nUnweighted loss:{}".format(criterion(outputs, labels), criterion_unweighted(outputs, labels)))
 	print("Custom unweighted loss:{}\n Custom weighted loss:{}".format(custom_criterion, custom_criterion_weighted))
 
 	_, outputs = torch.max(outputs, 1)
@@ -147,6 +155,7 @@ for test_i, data in enumerate(testloader, 0):
 	img_pred = np.repeat(img_pred, 10, axis=0)
 
 	img_gt = labels.data.numpy()[0]
+	img_gt[img_gt == 2] = 0
 	img_gt = np.repeat(img_gt, 10, axis=0)
 
 	cv2.imshow("predictions", 255*img_pred.astype(np.uint8))

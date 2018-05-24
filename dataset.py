@@ -25,17 +25,24 @@ def cross_entropy_weighted_loss(output, target, scalar_weights):
 	weights = np.copy(target.data)
 
 	# assert num channels == len(weight)
+	# print("Scalar weights: {}".format(scalar_weights))
 
 	for class_id in range(len(scalar_weights)):
 		weights[weights == class_id] = float(scalar_weights[class_id])
 
 	weights = Variable(torch.from_numpy(weights).float())
+	# print("Weights:{}".format(weights))
 
 	loss = nn.CrossEntropyLoss(reduce=False)
 	# x has size (N, C, 224, 224)
 
+	# print("Target: {}".format(target))
+	# print("Output: {}".format(output))
+
 	out = loss(output, target)
 	# out has size (N, H, W). Your weights have size (H, W)
+
+	# print("Loss:{}".format(out))
 
 	result = (out * weights)
 	result = result.mean()
@@ -168,6 +175,9 @@ class LidarDataset(Dataset):
 			
 			data_out[ring_id, :copy_till] = [int(item) for item in ring["label_gt"][:copy_till]]
 
+			data_in_cropped = data_in
+			data_out_cropped = data_out
+			
 			if self.COLS != self.INPUT_DIM[2]:
 				counter = 0
 				while True:

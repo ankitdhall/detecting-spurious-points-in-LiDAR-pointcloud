@@ -19,7 +19,13 @@ import dataset
 
 from unet_model import UNet
 
-CLASS_WEIGHTS = [1.0, 1000.0]
+# CLASS_WEIGHTS = [1.0, 10000.0, 0.0]
+# lr=0.0001, m=0.9
+
+# CLASS_WEIGHTS = [1.0, 100000.0, 0.0]
+# lr=0.000001, momentum=0.9
+
+CLASS_WEIGHTS = [0.1, 100000.0, 0.0]
 
 # net = UNet(4, 2)
 # lr = 0.01
@@ -38,16 +44,14 @@ print(net)
 
 
 # create your optimizer
-optimizer = optim.SGD(net.parameters(), lr=0.0001, momentum=0.9)
+optimizer = optim.SGD(net.parameters(), lr=0.000001, momentum=0.9)
 
 BKP_DIR = "checkpoints/"
-SAVE_EVERY = 200
-
-GAMMA = 0.0000001
+SAVE_EVERY = 20
 
 
 ON_CLUSTER = False
-COLS = 256
+COLS = 1024
 INPUT_DIM = (5, 16, 1024)
 MAX_ROLL = COLS
 
@@ -58,7 +62,7 @@ if ON_CLUSTER:
 	LIST_PATH = "/cluster/home/adhall/code/LiDAR-weather-gt/"
 	BKP_DIR = LIST_PATH + BKP_DIR
 
-train_dataset = dataset.LidarDataset(annotations=LIST_PATH + "train.txt",
+train_dataset = dataset.LidarDataset(annotations=LIST_PATH + "train_small.txt",
 									annotation_dir=ANNO_PATH + "data/",
 									input_dim=INPUT_DIM,
 									cols=COLS,
@@ -66,7 +70,7 @@ train_dataset = dataset.LidarDataset(annotations=LIST_PATH + "train.txt",
 									transform=dataset.Roll(MAX_ROLL))
 print("Loaded train_dataset...")
 
-test_dataset = dataset.LidarDataset(annotations=LIST_PATH + "test.txt",
+test_dataset = dataset.LidarDataset(annotations=LIST_PATH + "test_small.txt",
 									annotation_dir=ANNO_PATH + "data/",
 									input_dim=INPUT_DIM,
 									cols=COLS,
@@ -86,7 +90,7 @@ testloader = torch.utils.data.DataLoader(dataset=test_dataset,
                                            batch_size=BATCHSIZE, 
                                            shuffle=False,
                                            num_workers=0)
-
+print("Loaded data!")
 ##### loading model and optimizer state #####
 
 RESUME = False
@@ -116,7 +120,7 @@ def save_checkpoint(state, dir_path, filename):
 
 
 net.train()
-for epoch in range(START_EPOCH, 502):  # loop over the dataset multiple times
+for epoch in range(START_EPOCH, 82):  # loop over the dataset multiple times
 
 	running_loss = 0.0
 	running_data_loss = 0.0
@@ -125,7 +129,9 @@ for epoch in range(START_EPOCH, 502):  # loop over the dataset multiple times
 	for i, data in enumerate(trainloader, 0):
 		inputs, labels = data['image'], data['keypoints']
 
-		# print(inputs.shape)
+		# print("*"*20)
+		# print("Input shape:{}".format(inputs.shape))
+		# print("Labels shape:{}".format(labels.shape))
 
 		# wrap them in Variable
 		inputs = Variable(inputs).float()
@@ -139,12 +145,14 @@ for epoch in range(START_EPOCH, 502):  # loop over the dataset multiple times
 
 		# forward + backward + optimize
 		outputs = net(inputs)
+		# print("Output shape:{}".format(outputs.shape))
 
-		outputs = outputs.view(outputs.size(0), 2, 16, -1)
+		outputs = outputs.view(outputs.size(0), len(CLASS_WEIGHTS), 16, -1)
+		# print("Output reshape:{}".format(outputs.shape))
 
 		# data_loss = criterion(outputs, labels)
 		data_loss = dataset.cross_entropy_weighted_loss(outputs, labels, CLASS_WEIGHTS)
-		
+		# print("Data loss:{}".format(data_loss))
 
 		loss = data_loss # + GAMMA*regularization_loss
 
@@ -155,6 +163,8 @@ for epoch in range(START_EPOCH, 502):  # loop over the dataset multiple times
 		running_data_loss += data_loss.data[0]
 		# running_reg_loss += regularization_loss.data[0]
 		running_loss += loss.data[0]
+
+		# print("End of iteration!")
 
 		if i % 2000 == 0:    # print every 2000 mini-batches
 			print('[%d, %5d] train loss: %.10f data_loss: %.10f reg_loss: %.10f' %
@@ -178,18 +188,18 @@ for epoch in range(START_EPOCH, 502):  # loop over the dataset multiple times
 				# forward
 				outputs = net(inputs)
 
-				outputs = outputs.view(outputs.size(0), 2, 16, -1)
+				outputs = outputs.view(outputs.size(0), len(CLASS_WEIGHTS), 16, -1)
 				
 				# print torch.max(outputs, 1)
 
 
 				# data_loss_test = criterion(outputs, labels)
-				data_loss_test = dataset.cross_entropy_weighted_loss(outputs, labels, [1.0, 1.0])
+				data_loss_test = dataset.cross_entropy_weighted_loss(outputs, labels, [1.0, 1.0, 0.0])
 				
 				test_loss += data_loss_test # + GAMMA*regularization_loss_test
 
 				# only for prining purposes
-				data_loss_test = 0.0
+				data_loss_test = dataset.cross_entropy_weighted_loss(outputs, labels, CLASS_WEIGHTS)
 
 			print('[%d, %5d] test loss: %.10f data_loss: %.10f reg_loss: %.10f' %
 				  (epoch + 1, i + 1, test_loss*1.0 / test_sample_count, data_loss_test*1.0 / test_sample_count ,\
