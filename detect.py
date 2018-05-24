@@ -55,6 +55,35 @@ class detect():
 		predictions = self.net(input)
 		return predictions
 
+def create_plt(gt, input):
+	print("GT shape: {}".format(gt.shape))
+	print("Input shape: {}".format(input[0].shape))
+	
+	class_id = 0
+	X, Y, Z = [], [], []
+	for ring_id in range(16):
+		x = input[0, 0, ring_id]
+		y = input[0, 1, ring_id]
+		z = input[0, 2, ring_id]
+
+		print("X:{}".format(x[gt[ring_id] == class_id].shape))
+		print("Y:{}".format(y[gt[ring_id] == class_id].shape))
+		print("Z:{}".format(z[gt[ring_id] == class_id].shape))
+
+		X.extend(x[gt[ring_id, :] == class_id])
+		Y.extend(y[gt[ring_id, :] == class_id])
+		Z.extend(z[gt[ring_id, :] == class_id])
+
+	fig = plt.figure()
+	ax = fig.add_subplot(111, projection='3d')
+	ax.scatter(X, Y, Z, s=0.1)
+	
+	# ax.set_xlabel('X Label')
+	# ax.set_ylabel('Y Label')
+	# ax.set_zlabel('Z Label')
+
+	plt.show()
+
 # criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor([1.0, 10000.0]))
 # criterion_unweighted = nn.CrossEntropyLoss()
 
@@ -83,7 +112,7 @@ testloader = torch.utils.data.DataLoader(dataset=test_dataset,
 
 BKP_DIR = "checkpoints/"
 
-RESTORE_MODEL_PATH = BKP_DIR + '60.pth'
+RESTORE_MODEL_PATH = BKP_DIR + '20.pth'
 
 lidar_classify = detect(RESTORE_MODEL_PATH, USE_NET)
 
@@ -155,6 +184,10 @@ for test_i, data in enumerate(testloader, 0):
 	img_pred = np.repeat(img_pred, 10, axis=0)
 
 	img_gt = labels.data.numpy()[0]
+
+	# create_plt(img_gt, inputs.data.numpy())
+	# break
+
 	img_gt[img_gt == 2] = 0
 	img_gt = np.repeat(img_gt, 10, axis=0)
 
