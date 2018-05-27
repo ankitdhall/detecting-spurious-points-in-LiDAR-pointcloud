@@ -59,24 +59,29 @@ def create_plt(gt, input):
 	print("GT shape: {}".format(gt.shape))
 	print("Input shape: {}".format(input[0].shape))
 	
-	class_id = 0
-	X, Y, Z = [], [], []
-	for ring_id in range(16):
-		x = input[0, 0, ring_id]
-		y = input[0, 1, ring_id]
-		z = input[0, 2, ring_id]
+	CLASS_ID = [0, 1]
+	X, Y, Z, color = [], [], [], []
+	for class_id in CLASS_ID:
+		for ring_id in range(16):
+			x = input[0, 0, ring_id]
+			y = input[0, 1, ring_id]
+			z = input[0, 2, ring_id]
 
-		print("X:{}".format(x[gt[ring_id] == class_id].shape))
-		print("Y:{}".format(y[gt[ring_id] == class_id].shape))
-		print("Z:{}".format(z[gt[ring_id] == class_id].shape))
+			print("X:{}".format(x[gt[ring_id] == class_id].shape))
+			print("Y:{}".format(y[gt[ring_id] == class_id].shape))
+			print("Z:{}".format(z[gt[ring_id] == class_id].shape))
 
-		X.extend(x[gt[ring_id, :] == class_id])
-		Y.extend(y[gt[ring_id, :] == class_id])
-		Z.extend(z[gt[ring_id, :] == class_id])
+			X.extend(x[gt[ring_id, :] == class_id])
+			Y.extend(y[gt[ring_id, :] == class_id])
+			Z.extend(z[gt[ring_id, :] == class_id])
+			if class_id == 0:
+				color.extend(['b']*x[gt[ring_id] == class_id].shape[0])
+			else:
+				color.extend(['r']*x[gt[ring_id] == class_id].shape[0])
 
 	fig = plt.figure()
 	ax = fig.add_subplot(111, projection='3d')
-	ax.scatter(X, Y, Z, s=0.1)
+	ax.scatter(X, Y, Z, s=0.05, c=color)
 	
 	# ax.set_xlabel('X Label')
 	# ax.set_ylabel('Y Label')
@@ -112,7 +117,7 @@ testloader = torch.utils.data.DataLoader(dataset=test_dataset,
 
 BKP_DIR = "checkpoints/"
 
-RESTORE_MODEL_PATH = BKP_DIR + '20.pth'
+RESTORE_MODEL_PATH = BKP_DIR + '300.pth'
 
 lidar_classify = detect(RESTORE_MODEL_PATH, USE_NET)
 
@@ -185,8 +190,8 @@ for test_i, data in enumerate(testloader, 0):
 
 	img_gt = labels.data.numpy()[0]
 
-	# create_plt(img_gt, inputs.data.numpy())
-	# break
+	create_plt(img_gt, inputs.data.numpy())
+	break
 
 	img_gt[img_gt == 2] = 0
 	img_gt = np.repeat(img_gt, 10, axis=0)

@@ -25,7 +25,7 @@ from unet_model import UNet
 # CLASS_WEIGHTS = [1.0, 100000.0, 0.0]
 # lr=0.000001, momentum=0.9
 
-CLASS_WEIGHTS = [0.1, 100000.0, 0.0]
+CLASS_WEIGHTS = [1.0, 100000.0, 0.0]
 
 # net = UNet(4, 2)
 # lr = 0.01
@@ -44,7 +44,7 @@ print(net)
 
 
 # create your optimizer
-optimizer = optim.SGD(net.parameters(), lr=0.000001, momentum=0.9)
+optimizer = optim.SGD(net.parameters(), lr=0.0000001, momentum=0.9)
 
 BKP_DIR = "checkpoints/"
 SAVE_EVERY = 20
@@ -62,7 +62,7 @@ if ON_CLUSTER:
 	LIST_PATH = "/cluster/home/adhall/code/LiDAR-weather-gt/"
 	BKP_DIR = LIST_PATH + BKP_DIR
 
-train_dataset = dataset.LidarDataset(annotations=LIST_PATH + "train_small.txt",
+train_dataset = dataset.LidarDataset(annotations=LIST_PATH + "train.txt",
 									annotation_dir=ANNO_PATH + "data/",
 									input_dim=INPUT_DIM,
 									cols=COLS,
@@ -70,7 +70,7 @@ train_dataset = dataset.LidarDataset(annotations=LIST_PATH + "train_small.txt",
 									transform=dataset.Roll(MAX_ROLL))
 print("Loaded train_dataset...")
 
-test_dataset = dataset.LidarDataset(annotations=LIST_PATH + "test_small.txt",
+test_dataset = dataset.LidarDataset(annotations=LIST_PATH + "train.txt",
 									annotation_dir=ANNO_PATH + "data/",
 									input_dim=INPUT_DIM,
 									cols=COLS,
@@ -95,7 +95,7 @@ print("Loaded data!")
 
 RESUME = False
 START_EPOCH = 0
-RESTORE_MODEL_PATH = BKP_DIR + "10.pth"
+RESTORE_MODEL_PATH = BKP_DIR + "80.pth"
 
 if RESUME:
 	if os.path.isfile(RESTORE_MODEL_PATH):
@@ -120,7 +120,7 @@ def save_checkpoint(state, dir_path, filename):
 
 
 net.train()
-for epoch in range(START_EPOCH, 82):  # loop over the dataset multiple times
+for epoch in range(START_EPOCH, 302):  # loop over the dataset multiple times
 
 	running_loss = 0.0
 	running_data_loss = 0.0
