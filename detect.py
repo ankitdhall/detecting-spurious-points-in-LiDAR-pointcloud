@@ -8,6 +8,7 @@ import torchvision
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.animation as animation
 
 import cv2
 import numpy as np
@@ -79,15 +80,22 @@ def create_plt(gt, input):
 			else:
 				color.extend(['r']*x[gt[ring_id] == class_id].shape[0])
 
-	fig = plt.figure()
-	ax = fig.add_subplot(111, projection='3d')
-	ax.scatter(X, Y, Z, s=0.05, c=color)
-	
-	# ax.set_xlabel('X Label')
-	# ax.set_ylabel('Y Label')
-	# ax.set_zlabel('Z Label')
+	# fig = plt.figure()
+	# ax = fig.add_subplot(111, projection='3d')
 
-	plt.show()
+	scale =1.0
+	for i in range(len(X)):
+		X[i] = scale*X[i]
+		Y[i] = scale*Y[i]
+		Z[i] = scale*Z[i]
+
+	# ax.scatter(X, Y, Z, s=0.2, c=color)
+	# plt.axis([-3.5, 3.5, -3.5, 3.5])
+	# plt.show()
+
+	return (X, Y, Z, color)
+
+	
 
 # criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor([1.0, 10000.0]))
 # criterion_unweighted = nn.CrossEntropyLoss()
@@ -98,7 +106,7 @@ CLASS_WEIGHTS = [1.0, 10000.0, 0.0]
 COLS = 1024
 MAX_ROLL = COLS
 
-test_dataset = dataset.LidarDataset(annotations="test_small.txt",
+test_dataset = dataset.LidarDataset(annotations="viz.txt",
 									annotation_dir="data/",
 									input_dim=(5, 16, 1024),
 									cols=COLS,
@@ -109,9 +117,9 @@ print("Loaded test_dataset...")
 BATCHSIZE = 1
 
 testloader = torch.utils.data.DataLoader(dataset=test_dataset,
-                                           batch_size=BATCHSIZE, 
-                                           shuffle=False,
-                                           num_workers=0)
+										   batch_size=BATCHSIZE, 
+										   shuffle=False,
+										   num_workers=0)
 
 ##### loading model and optimizer state #####
 
@@ -123,6 +131,8 @@ lidar_classify = detect(RESTORE_MODEL_PATH, USE_NET)
 
 elapsed_time = 0.0
 forward_passes = 0
+
+output_to_plot = []
 
 for test_i, data in enumerate(testloader, 0):
 	inputs, labels = data['image'], data['keypoints']
@@ -190,14 +200,44 @@ for test_i, data in enumerate(testloader, 0):
 
 	img_gt = labels.data.numpy()[0]
 
-	create_plt(img_gt, inputs.data.numpy())
-	break
+	print("INput shape:{}, Output shape: {}".format(img_gt.shape, outputs.data.numpy()[0].shape))
+	
+	output_to_plot.append(create_plt(outputs.data.numpy()[0], inputs.data.numpy()))
+	# break
 
 	img_gt[img_gt == 2] = 0
 	img_gt = np.repeat(img_gt, 10, axis=0)
 
-	cv2.imshow("predictions", 255*img_pred.astype(np.uint8))
-	cv2.imshow("gt", 255*img_gt.astype(np.uint8))
-	print len(np.where(img_gt == 1)[0])
-	print type(img_gt), img_gt.dtype
-	cv2.waitKey(0)
+	# cv2.imshow("predictions", 255*img_pred.astype(np.uint8))
+	# cv2.imshow("gt", 255*img_gt.astype(np.uint8))
+	# print len(np.where(img_gt == 1)[0])
+	# print type(img_gt), img_gt.dtype
+	# cv2.waitKey(0)
+
+
+
+
+
+
+
+fig = plt.figure()
+ax = Axes3D(fig)#fig.add_subplot(111, projection='3d')
+X, Y, Z, color = [], [], [], []
+sc = ax.scatter(X, Y, Z, s=10, c=color)#, c=color)
+plt.axis([-3.5, 3.5, -3.5, 3.5])
+# plt.show()
+
+
+def animate(i):
+	x, y, z, C = output_to_plot[i][0], output_to_plot[i][1], output_to_plot[i][2], output_to_plot[i][3]
+	print i, len(x), len(y), len(z), len(C)
+
+	sc._offsets3d = (x, y, z)
+	sc._facecolor3d = C
+	return (sc)
+
+
+ani = animation.FuncAnimation(fig, animate, 
+				frames=125, interval=50, repeat=True)
+
+plt.show()

@@ -38,8 +38,8 @@ def split_scenes(test_ids):
 	mypath = "data/"
 	onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
 
-	onlyfiles = sorted(onlyfiles)
-	random.shuffle(onlyfiles)
+	# onlyfiles = sorted(onlyfiles)
+	# random.shuffle(onlyfiles)
 
 	for filename in onlyfiles:
 
