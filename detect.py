@@ -68,9 +68,9 @@ def create_plt(gt, input):
 			y = input[0, 1, ring_id]
 			z = input[0, 2, ring_id]
 
-			print("X:{}".format(x[gt[ring_id] == class_id].shape))
-			print("Y:{}".format(y[gt[ring_id] == class_id].shape))
-			print("Z:{}".format(z[gt[ring_id] == class_id].shape))
+			# print("X:{}".format(x[gt[ring_id] == class_id].shape))
+			# print("Y:{}".format(y[gt[ring_id] == class_id].shape))
+			# print("Z:{}".format(z[gt[ring_id] == class_id].shape))
 
 			X.extend(x[gt[ring_id, :] == class_id])
 			Y.extend(y[gt[ring_id, :] == class_id])
@@ -103,12 +103,12 @@ def create_plt(gt, input):
 USE_NET = "lidar"
 
 CLASS_WEIGHTS = [1.0, 10000.0, 0.0]
-COLS = 1024
+COLS = 2048
 MAX_ROLL = COLS
 
-test_dataset = dataset.LidarDataset(annotations="viz.txt",
+test_dataset = dataset.LidarDataset(annotations="viz5.txt",
 									annotation_dir="data/",
-									input_dim=(5, 16, 1024),
+									input_dim=(5, 16, COLS), #1024),
 									cols=COLS,
 									dont_read=[],
 									transform=dataset.Roll(MAX_ROLL))
@@ -202,7 +202,8 @@ for test_i, data in enumerate(testloader, 0):
 
 	print("INput shape:{}, Output shape: {}".format(img_gt.shape, outputs.data.numpy()[0].shape))
 	
-	output_to_plot.append(create_plt(outputs.data.numpy()[0], inputs.data.numpy()))
+	# output_to_plot.append(create_plt(outputs.data.numpy()[0], inputs.data.numpy()))
+	output_to_plot.append(create_plt(img_gt, inputs.data.numpy()))
 	# break
 
 	img_gt[img_gt == 2] = 0
@@ -224,7 +225,7 @@ fig = plt.figure()
 ax = Axes3D(fig)#fig.add_subplot(111, projection='3d')
 X, Y, Z, color = [], [], [], []
 sc = ax.scatter(X, Y, Z, s=10, c=color)#, c=color)
-plt.axis([-3.5, 3.5, -3.5, 3.5])
+plt.axis([-4.5, 4.5, -4.5, 4.5])
 # plt.show()
 
 

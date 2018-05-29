@@ -3,5 +3,5 @@ bags/
 data/
 data_jacket/
 checkpoints/
-data_npz/
+data*/
 *.npz

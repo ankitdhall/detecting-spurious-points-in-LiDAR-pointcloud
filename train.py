@@ -51,8 +51,8 @@ SAVE_EVERY = 20
 
 
 ON_CLUSTER = False
-COLS = 1024
-INPUT_DIM = (5, 16, 1024)
+COLS = 2048
+INPUT_DIM = (5, 16, COLS)#1024)
 MAX_ROLL = COLS
 
 LIST_PATH = ""
@@ -194,12 +194,13 @@ for epoch in range(START_EPOCH, 302):  # loop over the dataset multiple times
 
 
 				# data_loss_test = criterion(outputs, labels)
-				data_loss_test = dataset.cross_entropy_weighted_loss(outputs, labels, [1.0, 1.0, 0.0])
+				# data_loss_test = dataset.cross_entropy_weighted_loss(outputs, labels, [1.0, 1.0, 0.0])
+				data_loss_test = dataset.cross_entropy_weighted_loss(outputs, labels, CLASS_WEIGHTS)
 				
 				test_loss += data_loss_test # + GAMMA*regularization_loss_test
 
 				# only for prining purposes
-				data_loss_test = dataset.cross_entropy_weighted_loss(outputs, labels, CLASS_WEIGHTS)
+				# data_loss_test = dataset.cross_entropy_weighted_loss(outputs, labels, CLASS_WEIGHTS)
 
 			print('[%d, %5d] test loss: %.10f data_loss: %.10f reg_loss: %.10f' %
 				  (epoch + 1, i + 1, test_loss*1.0 / test_sample_count, data_loss_test*1.0 / test_sample_count ,\
