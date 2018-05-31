@@ -166,6 +166,7 @@ class LidarDataset(Dataset):
 			# print(ring.keys())
 			
 			copy_till = min(self.INPUT_DIM[2], len(ring["y_gt"]))
+			print("Copy till: {}".format(copy_till))
 
 			data_in[0, ring_id, :copy_till] = ring["x_gt"][:copy_till]
 			data_in[1, ring_id, :copy_till] = ring["y_gt"][:copy_till]

@@ -106,7 +106,7 @@ CLASS_WEIGHTS = [1.0, 10000.0, 0.0]
 COLS = 2048
 MAX_ROLL = COLS
 
-test_dataset = dataset.LidarDataset(annotations="viz5.txt",
+test_dataset = dataset.LidarDataset(annotations="viz8.txt",
 									annotation_dir="data/",
 									input_dim=(5, 16, COLS), #1024),
 									cols=COLS,
@@ -125,7 +125,7 @@ testloader = torch.utils.data.DataLoader(dataset=test_dataset,
 
 BKP_DIR = "checkpoints/"
 
-RESTORE_MODEL_PATH = BKP_DIR + '300.pth'
+RESTORE_MODEL_PATH = BKP_DIR + '300_euler.pth'
 
 lidar_classify = detect(RESTORE_MODEL_PATH, USE_NET)
 
@@ -202,8 +202,8 @@ for test_i, data in enumerate(testloader, 0):
 
 	print("INput shape:{}, Output shape: {}".format(img_gt.shape, outputs.data.numpy()[0].shape))
 	
-	# output_to_plot.append(create_plt(outputs.data.numpy()[0], inputs.data.numpy()))
-	output_to_plot.append(create_plt(img_gt, inputs.data.numpy()))
+	output_to_plot.append(create_plt(outputs.data.numpy()[0], inputs.data.numpy()))
+	# output_to_plot.append(create_plt(img_gt, inputs.data.numpy()))
 	# break
 
 	img_gt[img_gt == 2] = 0
@@ -239,6 +239,14 @@ def animate(i):
 
 
 ani = animation.FuncAnimation(fig, animate, 
-				frames=125, interval=50, repeat=True)
+				frames=317, interval=20, repeat=True)
+# test:
+# viz5 125
+
+# train:
+# viz7 701
+# viz8 317
+# viz9 
+# viz10 
 
 plt.show()
